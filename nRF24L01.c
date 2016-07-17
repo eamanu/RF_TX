@@ -107,7 +107,7 @@ void rf_send(uint8_t * data, uint8_t len){
 	PORTB &= ~(1<<CE);
 
 	PTX = 1; // transmiting
-	rf_w_config_register(CONFIG_NRF24L01, ( (1<<MASK_RX_DR) | (1<<EN_CRC) | (0<<CRCO) ) | (1<<PRIM_RX | 0<<PWR_UP));
+	rf_w_config_register(CONFIG_NRF24L01, ( (1<<MASK_RX_DR) | (1<<EN_CRC) | (0<<CRCO) ) | (0<<PRIM_RX | 0<<PWR_UP));
 
 	PORTB &= ~(1<<CSN);
 	spi_tranceiver(FLUSH_TX); // Write cmd to flush tx fifo
