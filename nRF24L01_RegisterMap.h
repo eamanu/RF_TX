@@ -118,4 +118,13 @@
 #define NOP           0xFF
 #define R_RX_PL_WID	  0x60
 
+/* dynamic length */
+#define DYNPD       0x1C
+#define DPL_P0      0
+#define DPL_P1      1
+#define DPL_P2      2
+#define DPL_P3      3
+#define DPL_P4      4
+#define DPL_P5      5
+
 #endif /* COMM_NRF24L01_REGISTERMAP_H_ */

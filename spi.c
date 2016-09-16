@@ -13,7 +13,7 @@ void init_spi(void){
 	//DDRB &= ~((1<<MOSI)|(1<<MISO)|(1<<SS)|(1<<SCK));
 	//DDRB &= ~(1<<SCK);
 	// pins like output
-	DDRB = (1<<MOSI) | (1<<SCK) | (1<<SS);
+	DDRB = (1<<MOSI) | (1<<SCK) | (1<<SS) | (0<<MISO);
 
 	SPCR = ((1<<SPE)|               // SPI Enable
 			(0<<SPIE)|              // SPI Interupt Enable

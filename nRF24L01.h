@@ -14,6 +14,8 @@
 #define CE PORTB1 /*Digital pin 09*/
 #define CSN PORTB2 /*Digital pin 10*/
 
+uint8_t pay_len;
+
 /*write a cmd*/
 void rf_w_config_register(uint8_t reg, uint8_t data);
 
@@ -24,7 +26,16 @@ void rf_write_register(uint8_t reg, uint8_t * data, uint8_t len);
 void rf_read_register(uint8_t reg, uint8_t * data, uint8_t len);
 
 /*RF config*/
-void rf_config(void);
+void rf_config(uint8_t channel, uint8_t pay_length);
+
+/*Set RX addr*/
+void set_rx_address(uint8_t * adr);
+
+/* Set the TX address */
+void set_tx_address(uint8_t* adr);
+
+/* Checks if RX FIFO is empty*/
+uint8_t isRXFifoEmpty();
 
 /*Init RF*/
 void rf_init(void);
@@ -56,10 +67,20 @@ void rf_get_data(uint8_t * data);
 /* Returns the length of data waiting in the RX fifo */
 uint8_t RXFifoPayloadLength();
 
+/* Returns the number of retransmissionn*/
+uint8_t nrf24_retransmissionCount();
 
+/*Send data pack to the default addr.*/
+void TX_MODE(uint8_t *data);
 
+/*Check if data is sending*/
+uint8_t nrf24_isSending();
 
+/*Power Down RF*/
+void rf_powerDown();
 
+/*Status of last message*/
+uint8_t rf_lastMessageStatus();
 
 #endif /* COMM_NRF24L01_H_ */
 
