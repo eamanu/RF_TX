@@ -17,27 +17,30 @@
 //volatile int PTX = 0;
 volatile int DATA_TO_SEND = 0;
 
-#define CE_LOW PORTB &= ~(1<<CE);
-#define CE_HIGH PORTB |= (1<<CE);
+/*
+#define PORTB &= ~(1<<CE) PORTB &= ~(1<<CE);
+#define PORTB |= (1<<CE) PORTB |= (1<<CE);
 
-#define CSN_LOW PORTB &= ~(1<<CSN);
-#define CSN_HIGH PORTB |= (1<<CSN);
+#define PORTB &= ~(1<<CSN) PORTB &= ~(1<<CSN);
+#define PORTB |= (1<<CSN) PORTB |= (1<<CSN);
+*/
 
 
 void rf_init(void){
+	init_spi();
 	//set output pin
 	DDRB |= (1<<CE)|(1<<CSN);
 
-	CE_LOW; // LOW CE
-	CSN_HIGH; // CSN HIGH
+	PORTB &= ~(1<<CE); // LOW CE
+	PORTB |= (1<<CSN); // CSN HIGH
 
 	/*@Correct rf_init está igual*/
 
 	//PORTB &= ~(1<<CE);
 	//PORTB |= (1<<CSN);
-	_delay_ms(5);
+	//_delay_ms(5);
 	//cli();
-	init_spi();
+
 	/*Go to standby-I*/
 	//StandbyI();
 }
@@ -49,37 +52,37 @@ void rf_config(uint8_t channel, uint8_t pay_length){
 	//set power level
 	//setPowerLevel();
 
-	pay_len = pay_length;
+	pay_len = 1;
 
 	// set rf channel
-	rf_w_config_register(RF_CH, channel);
+	nrf24_configRegister(RF_CH, channel);
 
 	//set payload lenght data
-	rf_w_config_register(RX_PW_P0, 0x00);
-	rf_w_config_register(RX_PW_P1, pay_len); // Data payload pipe
-	rf_w_config_register(RX_PW_P2, 0x00);
-	rf_w_config_register(RX_PW_P3, 0x00);
-	rf_w_config_register(RX_PW_P4, 0x00);
-	rf_w_config_register(RX_PW_P5, 0x00);
+	nrf24_configRegister(RX_PW_P0, 0x00);
+	nrf24_configRegister(RX_PW_P1, pay_len); // Data payload pipe
+	nrf24_configRegister(RX_PW_P2, 0x00);
+	nrf24_configRegister(RX_PW_P3, 0x00);
+	nrf24_configRegister(RX_PW_P4, 0x00);
+	nrf24_configRegister(RX_PW_P5, 0x00);
 
 	// 1 Mbps, TX gain: 0dbm
-	rf_w_config_register(RF_SETUP, (0<<RF_DR_HIGH) | ((0x03)<<RF_PWR));
+	nrf24_configRegister(RF_SETUP, (0<<RF_DR_HIGH) | ((0x03)<<RF_PWR));
 
 	// CRC enable, 1 byte CRC length
-	rf_w_config_register(CONFIG_NRF24L01,((1<<EN_CRC)|(0<<CRCO)));
+	nrf24_configRegister(CONFIG_NRF24L01,((1<<EN_CRC)|(0<<CRCO)));
 
 	//enable auto ACK
-	rf_w_config_register(EN_AA, (1<<ENAA_P0)|(1<<ENAA_P1)|(0<<ENAA_P2)|(0<<ENAA_P3)|(0<<ENAA_P4)|(0<<ENAA_P5));
+	nrf24_configRegister(EN_AA, (1<<ENAA_P0)|(1<<ENAA_P1)|(0<<ENAA_P2)|(0<<ENAA_P3)|(0<<ENAA_P4)|(0<<ENAA_P5));
 
 	// Enable RX addresses
-	rf_w_config_register(EN_RXADDR,(1<<ERX_P0)|(1<<ERX_P1)|(0<<ERX_P2)|(0<<ERX_P3)|(0<<ERX_P4)|(0<<ERX_P5));
+	nrf24_configRegister(EN_RXADDR,(1<<ERX_P0)|(1<<ERX_P1)|(0<<ERX_P2)|(0<<ERX_P3)|(0<<ERX_P4)|(0<<ERX_P5));
 
 	// set retries
 	// Auto retransmit delay: 1000 us and Up to 15 retransmit trials
-	rf_w_config_register(SETUP_RETR,(0x04<<ARD)|(0x0F<<ARC));
+	nrf24_configRegister(SETUP_RETR,((0x04<<ARD)|(0x0F<<ARC)));
 
 	 // Dynamic length configurations: No dynamic length
-	rf_w_config_register(DYNPD,(0<<DPL_P0)|(0<<DPL_P1)|(0<<DPL_P2)|(0<<DPL_P3)|(0<<DPL_P4)|(0<<DPL_P5));
+	nrf24_configRegister(DYNPD,(0<<DPL_P0)|(0<<DPL_P1)|(0<<DPL_P2)|(0<<DPL_P3)|(0<<DPL_P4)|(0<<DPL_P5));
 
 	// start receiver mode
 	RX_MODE();
@@ -90,9 +93,9 @@ void rf_config(uint8_t channel, uint8_t pay_length){
 /* Set the RX address */
 void set_rx_address(uint8_t * adr)
 {
-    CE_LOW;
+    PORTB &= ~(1<<CE);
     rf_write_register(RX_ADDR_P1,adr,5);
-    CE_HIGH;
+    PORTB |= (1<<CE);
 
     /*@Correct: Va bien hasta acá*/
 }
@@ -107,29 +110,29 @@ void set_tx_address(uint8_t* adr)
 }
 
 
-void rf_w_config_register(uint8_t reg, uint8_t data){
+void nrf24_configRegister(uint8_t reg, uint8_t data){
 	//PORTB &= ~(1<<CSN);
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	spi_tranceiver(W_REGISTER | (REGISTER_MASK & reg));
 	spi_tranceiver(data);
 	//PORTB |= (1<<CSN);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 }
 
 //write register
 void rf_write_register(uint8_t reg, uint8_t * data, uint8_t len){
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	spi_tranceiver(W_REGISTER | (REGISTER_MASK & reg));
 	spi_send(data, len);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 }
 
 //read a register
 void rf_read_register(uint8_t reg, uint8_t * data, uint8_t len){
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	spi_tranceiver(R_REGISTER | (REGISTER_MASK & reg));
 	spi_transfer(data,data,len);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 }
 
 /*Set power Level*/
@@ -146,10 +149,10 @@ void setPowerLevel(){
 uint8_t RXFifoPayloadLength()
 {
     uint8_t status;
-    CSN_LOW;
+    PORTB &= ~(1<<CSN);
     spi_tranceiver(R_RX_PL_WID);
     status = spi_tranceiver(0x00);
-    CSN_HIGH;
+    PORTB |= (1<<CSN);
     return status;
 
     /*@Correct: Hasta acá va ok*/
@@ -158,16 +161,16 @@ uint8_t RXFifoPayloadLength()
 
 /*flush RX fifo*/
 void nrf24l01_flushRXfifo() {
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	spi_tranceiver(FLUSH_RX);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 }
 
 /* flush RX fifo */
 void nrf24l01_flushTXfifo() {
-	CSN_LOW; //low CSN
+	PORTB &= ~(1<<CSN); //low CSN
 	spi_tranceiver(FLUSH_TX);
-	CSN_HIGH; //high CSN
+	PORTB |= (1<<CSN); //high CSN
 }
 
 void RX_MODE(){
@@ -175,23 +178,23 @@ void RX_MODE(){
 
 	nrf24l01_flushRXfifo();
 
-	rf_w_config_register(STATUS, (1<<MASK_RX_DR | 1<<MASK_TX_DS | 1<<MASK_MAX_RT));
+	nrf24_configRegister(STATUS, (1<<MASK_RX_DR | 1<<MASK_TX_DS | 1<<MASK_MAX_RT));
 
 	//PORTB &= ~(1<<CE);
-	CE_LOW;
-	rf_w_config_register(CONFIG_NRF24L01, (1<<EN_CRC)|(0<<CRCO) | (1<<PRIM_RX) | (1<<PWR_UP));
+	PORTB &= ~(1<<CE);
+	nrf24_configRegister(CONFIG_NRF24L01, (1<<EN_CRC)|(0<<CRCO) | (1<<PRIM_RX) | (1<<PWR_UP));
 	//PORTB |= (1<<CE);
-	CE_HIGH;
+	PORTB |= (1<<CE);
 	/*nrf24l01_flushTXfifo();
 	clear rx_dr bit
-	rf_w_config_register(STATUS, (1<<RX_DR));*/
+	nrf24_configRegister(STATUS, (1<<RX_DR));*/
 
 	/*@Correct: Hasta acá ok*/
 
 }
 
 void StandbyI(void){
-	rf_w_config_register(CONFIG_NRF24L01, (1<<PWR_UP));
+	nrf24_configRegister(CONFIG_NRF24L01, (1<<PWR_UP));
 	_delay_ms(2);
 
 	/*configure rf*/
@@ -204,9 +207,9 @@ uint8_t rf_data_ready(){
 	//if (PTX) return 0;
 	/*else*/
 	uint8_t status;
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	status = spi_tranceiver(NOP);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 
 	if(status & (1<<RX_DR)){
 		return 1;
@@ -230,15 +233,15 @@ uint8_t isRXFifoEmpty()
 
 /*Get Data from RX FIFO payload*/
 void rf_get_data(uint8_t * data){
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 
 	spi_tranceiver(R_RX_PAYLOAD); //send command to read payload data
 
 	spi_transfer(data,data,pay_len); //read data payload
 
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 
-	rf_w_config_register(STATUS,(1<<RX_DR));
+	nrf24_configRegister(STATUS,(1<<RX_DR));
 
 	/*@Correct: Hasta aca ok*/
 }
@@ -259,22 +262,23 @@ void TX_MODE(uint8_t *data){
 	//while (PTX) {} //wait until the last packet is sent
 	//PTX = 1; //TX mode
 	//PORTB &= ~(1<<CE);
-	CE_LOW;
+	PORTB &= ~(1<<CE);
 
 	/*Power up TX*/
-	rf_w_config_register(STATUS, (1<<MASK_RX_DR | 1<<MASK_TX_DS | 1<<MASK_MAX_RT));
-	rf_w_config_register(CONFIG_NRF24L01, (1<<EN_CRC)|(0<<CRCO) | (0<<PRIM_RX) | (1<<PWR_UP));
+	nrf24_configRegister(STATUS, (1<<MASK_RX_DR | 1<<MASK_TX_DS | 1<<MASK_MAX_RT));
+	nrf24_configRegister(CONFIG_NRF24L01, (1<<EN_CRC)|(0<<CRCO) | (0<<PRIM_RX) | (1<<PWR_UP));
 
 	nrf24l01_flushTXfifo();
 
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 
 	spi_tranceiver(W_TX_PAYLOAD); // Write command to write payload
 	spi_send(data, pay_len); //write data payload
-	CSN_HIGH;
+
+	PORTB |= (1<<CSN);
 
 	//PORTB |= (1<<CE);
-	CE_HIGH;
+	PORTB |= (1<<CE);
 
 	//_delay_us(150); //wait for the radio to power up
 	//RX_MODE(); // go to RX_MODE
@@ -284,13 +288,14 @@ void TX_MODE(uint8_t *data){
 	/*@Correct: Hasta acá ok*/
 }
 
+
 uint8_t nrf24_isSending()
 {
     /* read the current status */
     uint8_t status;
-    CSN_LOW;
+    PORTB &= ~(1<<CSN);
     status = spi_tranceiver(NOP);
-    CSN_HIGH;
+    PORTB |= (1<<CSN);
 
     //put_int(status);
     /* if sending successful (TX_DS) or max retries exceded (MAX_RT). */
@@ -308,9 +313,9 @@ uint8_t rf_lastMessageStatus()
 {
 	/* read the current status */
 	uint8_t status;
-	CSN_LOW;
+	PORTB &= ~(1<<CSN);
 	status = spi_tranceiver(NOP);
-	CSN_HIGH;
+	PORTB |= (1<<CSN);
 
     /* Transmission went OK */
     if((status & ((1 << TX_DS))))
@@ -330,8 +335,8 @@ uint8_t rf_lastMessageStatus()
 
 void rf_powerDown()
 {
-	CE_LOW;
-	rf_w_config_register(CONFIG_NRF24L01, ((1<<EN_CRC)|(0<<CRCO)));
+	PORTB &= ~(1<<CE);
+	nrf24_configRegister(CONFIG_NRF24L01, ((1<<EN_CRC)|(0<<CRCO)));
 
 	/*@Correct: Hasta acá ok*/
 }
@@ -349,14 +354,14 @@ ISR (INT0_vect){
 
 		PORTB &= ~(1<<CE);
 		// go to receive mode
-		rf_w_config_register(CONFIG_NRF24L01, ((1<<MASK_TX_DS) | (1<<MASK_RX_DR) | (1<<EN_CRC) | (1<<CRCO) ) | (1<<PRIM_RX | 1<<PWR_UP));
+		nrf24_configRegister(CONFIG_NRF24L01, ((1<<MASK_TX_DS) | (1<<MASK_RX_DR) | (1<<EN_CRC) | (1<<CRCO) ) | (1<<PRIM_RX | 1<<PWR_UP));
 		PORTB |= (1<<CE);
 
 		// receive mode
 		PTX = 0;
 
 		// reset status register
-		rf_w_config_register(STATUS, (1<<TX_DS)|(1<<MAX_RT));
+		nrf24_configRegister(STATUS, (1<<TX_DS)|(1<<MAX_RT));
 
 	}
 }*/

@@ -8,6 +8,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
+#include <stdint.h>
 
 //USART communication
 #include "uart.h"
@@ -36,7 +37,7 @@ int main(){
 	uint8_t reg = CONFIG_NRF24L01;
 	uint8_t data;
 	uint8_t temp;
-	uint8_t sending = 1;
+	uint8_t sending = 10;
 	while(1){
 
 		//for(uint8_t i = 0; i<10; i++){

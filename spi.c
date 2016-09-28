@@ -13,7 +13,7 @@ void init_spi(void){
 	//DDRB &= ~((1<<MOSI)|(1<<MISO)|(1<<SS)|(1<<SCK));
 	//DDRB &= ~(1<<SCK);
 	// pins like output
-	DDRB = (1<<MOSI) | (1<<SCK) | (1<<SS) | (0<<MISO);
+	DDRB |= ((1<<PORTB1) | (1<<MOSI) | (1<<SCK) | (1<<SS) | (0<<MISO));
 
 	SPCR = ((1<<SPE)|               // SPI Enable
 			(0<<SPIE)|              // SPI Interupt Enable
@@ -24,6 +24,8 @@ void init_spi(void){
 	        (0<<CPHA));             // Clock Phase (0:leading / 1:trailing edge sampling)
 
 	SPSR = (1<<SPI2X);              // Double Clock Rate
+
+	//SPCR = (1<<SPE)|(1<<MSTR)|(1<<SPR0);
 }
 
 uint8_t spi_tranceiver(uint8_t data){
