@@ -1,8 +1,9 @@
-/*
- * nRF24L01.c
- *
- *  Created on: Jul 9, 2016
- *      Author: root
+/**
+ * @file nRF24L01.c
+ * @date Jul 9, 2016
+ * @author Arias Emmanuel
+ * @brief driver del nRF24L01.
+ * @see http://freektc.blogspot.com.ar/2016/09/nrf24l01-usando-arduino-avr-ii.html
  */
 
 #include <avr/io.h>
@@ -25,7 +26,11 @@ volatile int DATA_TO_SEND = 0;
 #define PORTB |= (1<<CSN) PORTB |= (1<<CSN);
 */
 
-
+/**
+ *	@brief Setea los pines de salida. Inicializa SPI.
+ *	@param void
+ *	@return void
+ */
 void rf_init(void){
 	init_spi();
 	//set output pin
@@ -33,21 +38,15 @@ void rf_init(void){
 
 	PORTB &= ~(1<<CE); // LOW CE
 	PORTB |= (1<<CSN); // CSN HIGH
-
-	/*@Correct rf_init está igual*/
-
-	//PORTB &= ~(1<<CE);
-	//PORTB |= (1<<CSN);
-	//_delay_ms(5);
-	//cli();
-
-	/*Go to standby-I*/
-	//StandbyI();
 }
 
-/*RF config*/
-
-/*FIXME: cambio considerable*/
+/**
+ *	@brief Configura el radio
+ *	@param[in] channel Indica el canal de transmisión
+ *	@param[in] pay_length Indica el lenght del payload
+ *
+ *	@return void
+ */
 void rf_config(uint8_t channel, uint8_t pay_length){
 	//set power level
 	//setPowerLevel();
@@ -87,29 +86,41 @@ void rf_config(uint8_t channel, uint8_t pay_length){
 	// start receiver mode
 	RX_MODE();
 
-	/*@Correct va bien hasta acá*/
 }
 
-/* Set the RX address */
+/**
+ *	@brief Setea la dirección de receptor
+ *	@param[in] adr dirección
+ *
+ *	@return void
+ */
 void set_rx_address(uint8_t * adr)
 {
     PORTB &= ~(1<<CE);
     rf_write_register(RX_ADDR_P1,adr,5);
     PORTB |= (1<<CE);
-
-    /*@Correct: Va bien hasta acá*/
 }
 
-/* Set the TX address */
+/**
+ *	@brief Setea la dirección del transmisor
+ * 	@param[in] adr	Dirección transmisor
+ *
+ * 	@return void
+ */
 void set_tx_address(uint8_t* adr)
 {
 	rf_write_register(RX_ADDR_P0,adr,5);
 	rf_write_register(TX_ADDR,adr,5);
 
-	/*@Correct: Va bien hasta acá*/
 }
 
-
+/**
+ *	@brief Función que escribe los registros del nRF24L01.
+ * 	@param[in] reg	Registro a escribir
+ * 	@param[in] data	Dato a escribir
+ *
+ * 	@return void
+ */
 void nrf24_configRegister(uint8_t reg, uint8_t data){
 	//PORTB &= ~(1<<CSN);
 	PORTB &= ~(1<<CSN);
@@ -119,7 +130,16 @@ void nrf24_configRegister(uint8_t reg, uint8_t data){
 	PORTB |= (1<<CSN);
 }
 
-//write register
+/**
+ *	@brief Función que escribe los registros del nRF24L01. Y que requiere como parámetro
+ *	el ancho del dato que se va a escribir.
+ *
+ * 	@param[in] reg	Registro a escribir
+ * 	@param[in] data	Dato a escribir
+ * 	@param[in] len	Tamaño del ancho
+ *
+ * 	@return void
+ */
 void rf_write_register(uint8_t reg, uint8_t * data, uint8_t len){
 	PORTB &= ~(1<<CSN);
 	spi_tranceiver(W_REGISTER | (REGISTER_MASK & reg));
@@ -127,7 +147,15 @@ void rf_write_register(uint8_t reg, uint8_t * data, uint8_t len){
 	PORTB |= (1<<CSN);
 }
 
-//read a register
+/**
+ *	@brief Función que lee los registros del nRF24L01.
+ *
+ * 	@param[in] reg	Registro a leer
+ * 	@param[out] data Donde se va a escribir el dato
+ * 	@param[in] len	Tamaño del ancho
+ *
+ * 	@return void
+ */
 void rf_read_register(uint8_t reg, uint8_t * data, uint8_t len){
 	PORTB &= ~(1<<CSN);
 	spi_tranceiver(R_REGISTER | (REGISTER_MASK & reg));
@@ -135,7 +163,9 @@ void rf_read_register(uint8_t reg, uint8_t * data, uint8_t len){
 	PORTB |= (1<<CSN);
 }
 
-/*Set power Level*/
+/**
+ *	@brief Setea el power del transmisor.
+ */
 void setPowerLevel(){
 	uint8_t setup;
 	rf_read_register(RF_SETUP, &setup, 1);
@@ -145,7 +175,10 @@ void setPowerLevel(){
 
 
 
-/* Returns the length of data waiting in the RX fifo */
+/**
+ *	@brief Setea el ancho del payload.
+ *
+ */
 uint8_t RXFifoPayloadLength()
 {
     uint8_t status;
@@ -154,25 +187,31 @@ uint8_t RXFifoPayloadLength()
     status = spi_tranceiver(0x00);
     PORTB |= (1<<CSN);
     return status;
-
-    /*@Correct: Hasta acá va ok*/
 }
 
 
-/*flush RX fifo*/
+/**
+ * @brief se limpia el FIFO de RX
+ */
 void nrf24l01_flushRXfifo() {
 	PORTB &= ~(1<<CSN);
 	spi_tranceiver(FLUSH_RX);
 	PORTB |= (1<<CSN);
 }
 
-/* flush RX fifo */
+/**
+ *	@brief Se limpia el FIFO de TX
+ */
 void nrf24l01_flushTXfifo() {
 	PORTB &= ~(1<<CSN); //low CSN
 	spi_tranceiver(FLUSH_TX);
 	PORTB |= (1<<CSN); //high CSN
 }
 
+/**
+ * @brief se pasa al modo RX.
+ *
+ */
 void RX_MODE(){
 	//PTX = 0; // RX MODE
 
@@ -188,11 +227,12 @@ void RX_MODE(){
 	/*nrf24l01_flushTXfifo();
 	clear rx_dr bit
 	nrf24_configRegister(STATUS, (1<<RX_DR));*/
-
-	/*@Correct: Hasta acá ok*/
-
 }
 
+/**
+ * @brief se pasa al modo standby
+ *
+ */
 void StandbyI(void){
 	nrf24_configRegister(CONFIG_NRF24L01, (1<<PWR_UP));
 	_delay_ms(2);
@@ -201,7 +241,12 @@ void StandbyI(void){
 	//rf_config();
 
 }
-/*Know if there're data to read*/
+
+/**
+ * @brief Se pregunta si hay datos para leer
+ *
+ * return 1 si hay. Otro valor si no lo hay
+ */
 uint8_t rf_data_ready(){
 	/*no data. It's tx mode*/
 	//if (PTX) return 0;
@@ -216,10 +261,14 @@ uint8_t rf_data_ready(){
 	}
 	return !isRXFifoEmpty();
 
-	/*@Correct: Hasta aca ok*/
 }
 
-/* Checks if RX FIFO is empty*/
+/**
+ * @brief chekea si el FIFO de RX está vacia
+ *
+ * @return 1 vacio. Otro no
+ *
+ */
 uint8_t isRXFifoEmpty()
 {
     uint8_t fifoStatus;
@@ -228,10 +277,15 @@ uint8_t isRXFifoEmpty()
 
     return (fifoStatus & (1 << RX_EMPTY));
 
-    /*@Correct: Hasta aca ok*/
 }
 
-/*Get Data from RX FIFO payload*/
+
+/**
+ * 	@brief extrae datos del FIFO RX.
+ *
+ * 	@param[out] data Dónde se almacena el dato leido
+ *
+ */
 void rf_get_data(uint8_t * data){
 	PORTB &= ~(1<<CSN);
 
@@ -243,21 +297,26 @@ void rf_get_data(uint8_t * data){
 
 	nrf24_configRegister(STATUS,(1<<RX_DR));
 
-	/*@Correct: Hasta aca ok*/
 }
 
-/* Returns the number of retransmissions */
+/**
+ * @brief Devuelve la cantidad de retransmisiones
+ *
+ * @return cantidad de retransmisiones
+ */
 uint8_t nrf24_retransmissionCount()
 {
     uint8_t cnt;
     rf_read_register(OBSERVE_TX,&cnt,1);
     cnt = cnt & 0x0F;
     return cnt;
-
-    /*@Correct: Hasta acá ok*/
 }
 
-/*Send data pack to the default addr.*/
+/**
+ * 	@brief Pasa al modo TX
+ * 	@param[in] data Dato a enviar
+ *
+ */
 void TX_MODE(uint8_t *data){
 	//while (PTX) {} //wait until the last packet is sent
 	//PTX = 1; //TX mode
@@ -280,15 +339,13 @@ void TX_MODE(uint8_t *data){
 	//PORTB |= (1<<CE);
 	PORTB |= (1<<CE);
 
-	//_delay_us(150); //wait for the radio to power up
-	//RX_MODE(); // go to RX_MODE
-
-	/*FIXME: Para mí que hay que enviarlo a RX_MODE ver*/
-
-	/*@Correct: Hasta acá ok*/
 }
 
-
+/**
+ * 	@brief Indica si hay datos enviandose
+ *
+ * 	@return 0 si no hay datos. 1 si hay datos enviandose
+ */
 uint8_t nrf24_isSending()
 {
     /* read the current status */
@@ -306,9 +363,13 @@ uint8_t nrf24_isSending()
 
     return 1; /* true */
 
-    /*@Correct: Hasta acá ok*/
 }
 
+/**
+ * 	@brief estado del últimomensaje que se envió
+ *
+ * 	@return 0 si la transmisión está ok. 1 Mensaje probablemente fue enviado. 0xFF probablemente enviado
+ */
 uint8_t rf_lastMessageStatus()
 {
 	/* read the current status */
@@ -329,10 +390,12 @@ uint8_t rf_lastMessageStatus()
     }else{ /* Probably still sending ... */
         return 0xFF;
     }
-
-    /*@Correct: Hasta acá ok*/
 }
 
+/**
+ * @brief Se apaga el RF
+ *
+ */
 void rf_powerDown()
 {
 	PORTB &= ~(1<<CE);
@@ -340,6 +403,11 @@ void rf_powerDown()
 
 	/*@Correct: Hasta acá ok*/
 }
+
+/**
+ * @brief Manejo de las interrupciones. No implementado hasta el momento.
+ *
+ */
 
 /*
 ISR (INT0_vect){

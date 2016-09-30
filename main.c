@@ -1,8 +1,23 @@
-/*
- * main.c
+/**
+ * @file main.c
+ * @author Arias Emmanuel.
+ * @date Jul 12, 2016
+ * @brief Ejemplo de transmisor usando nRF24L01+.
  *
- *  Created on: Jul 12, 2016
- *      Author: root
+ * Para el transmisor se utiliza el módulo nRF24L01 + arduino Nano.
+ *
+ * La disposición de los pines es la siguiente
+ *
+ * - GND    >  GND
+ * - VCC    >  3.3V
+ * - CE     >  D9
+ * - CSN    >  D10
+ * - SCK    >  D13
+ * - MOSI 	 >  D11
+ * - MISO 	 >  D12
+ * - IRQ    >  No usado
+ *
+ *	@see http://freektc.blogspot.com.ar/2016/09/nrf24l01-usando-arduino-avr-ii.html
  */
 
 #include <avr/io.h>
@@ -17,8 +32,8 @@
 
 
 /*define addr*/
-uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};
-uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};
+uint8_t tx_address[5] = {0xE7,0xE7,0xE7,0xE7,0xE7};/**<Dirección del transmisor*/
+uint8_t rx_address[5] = {0xD7,0xD7,0xD7,0xD7,0xD7};/**<Dirección del receptorr*/
 
 int main(){
 	//inizialize usart
@@ -27,7 +42,7 @@ int main(){
 	//inizialize rf tx
 	rf_init();
 
-	rf_config(2,1);
+	rf_config(2,1);/**<Se configura el radio. Chanel 2. Size payload: 1byte*/
 
 	//set the device addr
 	set_rx_address(rx_address);
@@ -40,10 +55,9 @@ int main(){
 	uint8_t sending = 10;
 	while(1){
 
-		//for(uint8_t i = 0; i<10; i++){
+		for(uint8_t i = 0; i<10; i++){
 			/*Go to TX_MODE*/
-			TX_MODE(&sending);
-			put_string("here");
+			TX_MODE(&i);
 
 			/*Wait for transmission end*/
 			while(nrf24_isSending());
@@ -53,21 +67,16 @@ int main(){
 
 			if(temp == 0)
 			{
-				put_string("> Tranmission went OK\r\n");
+				put_string("> Tranmisión ok\r\n");
 			}
 			else if(temp == 1)
 			{
-				put_string("> Message is lost ...\r\n");
+				put_string("> Mensaje perdido...\r\n");
 			}
 
-			/* Retranmission count indicates the tranmission quality */
-			temp = nrf24_retransmissionCount();
-			put_string("> Retranmission count:\r\n");
-			put_int(temp);
+
 			/* Go to RX MODE ... */
 			RX_MODE();
-
-			//put_int(i);
 
 			_delay_ms(10);
 		//}
