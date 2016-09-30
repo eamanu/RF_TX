@@ -1,8 +1,7 @@
-/*
- * nRF24L01_RegisterMap.h
- *
- *  Created on: Jul 9, 2016
- *      Author: root
+/* @file nRF24L01_RegisterMap.h
+ * @brief Declaración de los registros del módulo
+ * @date Jul 9, 2016
+ * @author Arias Emmanuel
  */
 
 #ifndef COMM_NRF24L01_REGISTERMAP_H_
